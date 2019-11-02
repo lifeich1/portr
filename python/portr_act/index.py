@@ -75,4 +75,6 @@ def test_main():
 
 def update_params(**kwargs):
     global keys
+    if 'secret' in kwargs:
+        kwargs['secret'] = utils.enhance_secret(kwargs['secret'], keys['salt'])
     keys.update(kwargs)
