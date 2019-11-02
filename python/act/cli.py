@@ -19,3 +19,6 @@ def alive_request(url, secret, verbose=False):
 
 def test_main():
     alive_request('http://localhost:7070/ka', index.keys['secret'], verbose=True)
+
+def main(url, secret):
+    alive_request(url, secret)
