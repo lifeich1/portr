@@ -6,6 +6,7 @@ from . import utils
 
 urls = (
     '/', 'hello',
+    '/q', 'query',
     '/ka/(.*)', 'keepalive'
 )
 app = web.application(urls, globals())
@@ -20,10 +21,21 @@ keys = dict(
 )
 keys['salt'] = utils.enhance_salt(keys['salt'])
 
+def is_alive():
+    return time.time() - keys['last'] < keys['dead_dur']
+
 class hello:
     def GET(self):
-        return 'Hello + ' + '\nstartup: ' + time.ctime(keys['startup'])\
-            + '\nalive: ' + str(time.time() - keys['last'] < keys['dead_dur'])
+        al = is_alive()
+        ret = 'Hello + ' + '\nstartup: ' + time.ctime(keys['startup'])\
+            + '\nalive: ' + str(al) + '\nnow: ' + time.ctime()
+        if keys['last'] > 0:
+            ret += '\nlast register: ' + time.ctime(keys['last'])
+        return ret
+
+class query:
+    def GET(self):
+        return 'ALIVE' if is_alive() else 'DEAD'
 
 class keepalive:
     def GET(self, token):
