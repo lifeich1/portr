@@ -25,3 +25,11 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+ext {
+    Properties lcl_prs = new Properties()
+    InputStream inputStream = project.rootProject.file('local.properties').newDataInputStream()
+    lcl_prs.load(inputStream)
+
+    portr_q_url = lcl_prs.getProperty('portr.q_url')
+}

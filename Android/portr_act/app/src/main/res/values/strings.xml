@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Portr-act</string>
+    <string name="ready_prompt">Ready.</string>
+    <string name="pend_prompt">pending&#8230;</string>
+    <string name="send_req_err_prompt">Send Request Fail.</string>
+    <string name="good_res_prompt">done</string>
 </resources>
