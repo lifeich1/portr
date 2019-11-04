@@ -10,6 +10,7 @@ p_srv = subparsers.add_parser('srv')
 p_cli = subparsers.add_parser('cli')
 
 p_cli.add_argument('-u', '--url', default='http://localhost:7070/ka', help='keepalive target url prefix')
+p_cli.add_argument('-o', '--option', default='a', help='msg option')
 
 args = parser.parse_args()
 
@@ -33,6 +34,6 @@ secret = utils.enhance_secret(args.secret, index.keys['salt'])
 
 if args.command == 'cli':
     from . import cli
-    cli.main(args.url, secret)
+    cli.main(args.url, args.option, secret)
 else:
     raise NotImplementedError

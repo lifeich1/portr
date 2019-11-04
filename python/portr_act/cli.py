@@ -3,8 +3,8 @@ from . import utils
 import time
 import urllib.request
 
-def alive_request(url, secret, verbose=False):
-    token = utils.gen_po_token(time.time(), index.keys['salt'], secret)
+def alive_request(url, op, secret, verbose=False):
+    token = utils.gen_po_token(time.time(), op, index.keys['salt'], secret)
     if url is None:
         print('token:', token)
         return
@@ -18,7 +18,7 @@ def alive_request(url, secret, verbose=False):
 
 
 def test_main():
-    alive_request('http://localhost:7070/ka', index.keys['secret'], verbose=True)
+    alive_request('http://localhost:7070/ka', 'a', index.keys['secret'], verbose=True)
 
-def main(url, secret):
-    alive_request(url, secret)
+def main(url, op, secret):
+    alive_request(url, op, secret)

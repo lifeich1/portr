@@ -20,23 +20,23 @@ def timestamp2po(stamp):
 def po2timestamp(po):
     return time.mktime(time.strptime(po, _po_tm_fmt))
 
-def po_checksum(tm, salt, secret):
-    return hashlib.md5((tm + secret + salt).encode()).hexdigest()
+def po_checksum(tm, op, salt, secret):
+    return hashlib.md5((tm + secret + op + salt).encode()).hexdigest()
 
-def gen_po_token(stamp, salt, secret):
+def gen_po_token(stamp, op, salt, secret):
     t = timestamp2po(stamp)
-    return po_checksum(t, salt, secret) + t
+    return po_checksum(t, op, salt, secret) + t + op
 
 def parse_po_token(token, salt, secret):
     if len(token) <= 32:
         return None
-    check, po = token[:32], token[32:]
+    check, po, op = token[:32], token[32:-1], token[-1]
     try:
         stamp = po2timestamp(po)
     except Exception as e:
         return None
     t = timestamp2po(stamp)
-    if po_checksum(t, salt, secret) != check:
-        return None
+    if po_checksum(t, op, salt, secret) != check:
+        return None, None
     else:
-        return stamp
+        return stamp, op
