@@ -32,4 +32,7 @@ ext {
     lcl_prs.load(inputStream)
 
     portr_q_url = lcl_prs.getProperty('portr.q_url')
+    if (null == portr_q_url) {
+        throw new InvalidUserDataException("Invalid portr.q_url")
+    }
 }

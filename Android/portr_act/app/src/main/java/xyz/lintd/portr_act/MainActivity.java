@@ -109,10 +109,12 @@ public class MainActivity extends AppCompatActivity {
                 tvLast.setText("last fetch: " + dateFormat.format(new Date()));
                 if (result.equals("ALIVE")) {
                     if (!is_alive) {
+                        is_alive = true;
                         iBtn_act.setImageResource(android.R.drawable.presence_online);
                     }
                 } else {
                     if (is_alive) {
+                        is_alive = false;
                         iBtn_act.setImageResource(android.R.drawable.presence_offline);
                     }
                 }
