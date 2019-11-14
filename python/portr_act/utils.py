@@ -29,12 +29,12 @@ def gen_po_token(stamp, op, salt, secret):
 
 def parse_po_token(token, salt, secret):
     if len(token) <= 32:
-        return None
+        return None, None
     check, po, op = token[:32], token[32:-1], token[-1]
     try:
         stamp = po2timestamp(po)
     except Exception as e:
-        return None
+        return None, None
     t = timestamp2po(stamp)
     if po_checksum(t, op, salt, secret) != check:
         return None, None
