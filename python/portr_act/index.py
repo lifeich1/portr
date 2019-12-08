@@ -2,15 +2,17 @@ import web
 import time
 import hashlib
 import os
-import shelve
 
 from . import utils
+from .model import KAModel
+import socketio
 
 urls = (
     '/', 'hello',
     '/q', 'query',
     '/q/(.*)', 'query',
-    '/ka/(.*)', 'keepalive'
+    '/ka/(.*)', 'keepalive',
+    '/da/(.*)', 'remote_shut',
 )
 app = web.application(urls, globals())
 
@@ -24,54 +26,46 @@ keys = dict(
 )
 keys['salt'] = utils.enhance_salt(keys['salt'])
 
-_zero_cache_dict = {
-    'first_active_time': 0.0,
-    'last_active_time': 0.0,
-    'active_op': 'b'
-}
+_mod = None
 
-_order_cache_keys = (
-    'first_active_time',
-    'last_active_time',
-    'active_op',
-)
-
-def _cadic2tup(d):
-    return tuple([d[k] for k in _order_cache_keys])
+def _touch_mod():
+    global _mod
+    if _mod is None:
+        _mod = KAModel(keys['lastdate_cache'])
 
 def get_last():
-    p = keys['lastdate_cache']
-    try:
-        with shelve.open(p) as db:
-            for k in _order_cache_keys:
-                if k not in db:
-                    return _zero_cache_dict
-            return dict(**db)
-    except ValueError as e:
-        print('corrupted cache file')
-    return _zero_cache_dict
+    _touch_mod()
+    global _mod
+    _mod.sync()
+    return _mod.data
+
+_store_last_core = None
 
 def store_last(l, first_a=None, op=None):
-    u = dict(last_active_time=l, active_op=('a' if op is None else op))
-    if first_a is not None:
-        u['first_active_time'] = first_a
-    p = keys['lastdate_cache']
-    with shelve.open(p, writeback=True) as db:
-        db.update(u)
+    _touch_mod()
+    global _store_last_core
+    if _store_last_core is None:
+        global _mod
+        @_mod.commit
+        def ss(l, first_a, op):
+            global _mod
+            t = _mod.data
+            if first_a is not None:
+                t = t._replace(first_active_time=first_a)
+            if op is None:
+                op = 'a'
+            t = t._replace(last_active_time=l, active_op=op)
+            _mod.data = t
+        _store_last_core = ss
+    return _store_last_core(l, first_a, op)
 
-def is_alive_info(l, op):
-    return (time.time() - l < keys['dead_dur']) and (op == 'a')
-
-def is_alive():
-    d = get_last()
-    _, l, op = _cadic2tup(d)
-    return is_alive_info(l, op), d
 
 class hello:
     def GET(self):
-        global keys
-        al, info = is_alive()
-        fr, la, _ = _cadic2tup(info)
+        global keys, _mod
+        _mod.sync()
+        al, info = _mod.is_alive(), _mod.data
+        fr, la = info.first_active_time, info.last_active_time
         ret = 'Hello + ' + '\nstartup: ' + time.ctime(keys['startup'])\
             + '\nalive: ' + str(al) + '\nnow: ' + time.ctime()
         if la > 0:
@@ -82,10 +76,12 @@ class hello:
 class query:
     def GET(self, op=None):
         if op == 'first':
-            fr = get_last()['first_active_time']
+            fr = get_last().first_active_time
             return int(fr)
         else:
-            return 'ALIVE' if is_alive()[0] else 'DEAD'
+            global _mod
+            _mod.sync()
+            return 'ALIVE' if _mod.is_alive() else 'DEAD'
 
 class keepalive:
     def GET(self, token):
@@ -94,48 +90,57 @@ class keepalive:
         if stamp is None:
             return 'Invalid'
         else:
-            _, l, lop = _cadic2tup(get_last())
+            info = get_last()
+            l, lop = info.last_active_time, info.active_op
             if l < stamp:
                 d = {}
-                if not is_alive_info(l, lop):
+                global _mod
+                if not _mod.is_alive():
                     d = dict(first_a=stamp)
                 store_last(stamp, op=op, **d)
             return 'OK'
 
 import socketio
 
-def test_main(w=False):
-    if w:
+class remote_shut:
+    def GET(self, token):
         mgr = socketio.KombuManager('amqp://', write_only=True)
-        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='defa')
-        return
-    mgr = socketio.KombuManager('amqp://')
-    sio = socketio.Server(client_manager=mgr, async_mode='threading')
-
-    @sio.event
-    def connect(sid, environ):
-        print('+++ online', sid)
-        sio.enter_room(sid, 'defa')
-        sio.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='defa')
-
-    @sio.event
-    def disconnect(sid):
-        print('+++ offline', sid)
-
-    from flask import Flask
-    app = Flask(__name__)
-    app.wsgi_app = socketio.WSGIApp(sio, app.wsgi_app)
-    app.run(threaded=True)
+        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='pi')
+        return 'OK'
 
 
+#def test_main(w=False):
+#    if w:
+#        mgr = socketio.KombuManager('amqp://', write_only=True)
+#        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='defa')
+#        return
+#    mgr = socketio.KombuManager('amqp://')
+#    sio = socketio.Server(client_manager=mgr, async_mode='threading')
+#
+#    @sio.event
+#    def connect(sid, environ):
+#        print('+++ online', sid)
+#        sio.enter_room(sid, 'defa')
+#        sio.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='defa')
+#
+#    @sio.event
+#    def disconnect(sid):
+#        print('+++ offline', sid)
+#
+#    from flask import Flask
+#    app = Flask(__name__)
+#    app.wsgi_app = socketio.WSGIApp(sio, app.wsgi_app)
+#    app.run(threaded=True)
 
 
 
-#def test_main():
-#    import sys
-#    if len(sys.argv) > 1:
-#        sys.argv[1] = '7070'
-#    app.run()
+
+
+def test_main():
+    import sys
+    if len(sys.argv) > 1:
+        sys.argv[1] = '7070'
+    app.run()
 
 def update_params(**kwargs):
     global keys

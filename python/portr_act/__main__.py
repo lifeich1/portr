@@ -14,6 +14,8 @@ p_cli = subparsers.add_parser('cli')
 p_cli.add_argument('-u', '--url', default='http://localhost:7070/ka', help='keepalive target url prefix')
 p_cli.add_argument('-o', '--option', default='a', help='msg option')
 
+p_back = subparsers.add_parser('back')
+
 args = parser.parse_args()
 
 def test_main():
@@ -23,6 +25,9 @@ def test_main():
     elif args.command == 'cli':
         from . import cli
         cli.test_main()
+    elif args.command == 'back':
+        from . import back
+        back.test_main()
     else:
         raise NotImplementedError
 
@@ -36,6 +41,7 @@ secret = utils.enhance_secret(args.secret, index.keys['salt'])
 
 if args.command == 'cli':
     from . import cli
-    cli.main(args.url, args.option, secret)
+    #cli.main(args.url, args.option, secret)
+    cli.v2main(args.url)
 else:
     raise NotImplementedError
