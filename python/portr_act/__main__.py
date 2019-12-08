@@ -7,6 +7,8 @@ parser.add_argument('-s', '--secret', default='testtest', help='token secret')
 subparsers = parser.add_subparsers(dest='command')
 
 p_srv = subparsers.add_parser('srv')
+p_srv.add_argument('-w', action='store_true')
+
 p_cli = subparsers.add_parser('cli')
 
 p_cli.add_argument('-u', '--url', default='http://localhost:7070/ka', help='keepalive target url prefix')
@@ -17,7 +19,7 @@ args = parser.parse_args()
 def test_main():
     if args.command == 'srv':
         from . import index
-        index.test_main()
+        index.test_main(args.w)
     elif args.command == 'cli':
         from . import cli
         cli.test_main()

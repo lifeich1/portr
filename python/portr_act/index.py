@@ -102,11 +102,40 @@ class keepalive:
                 store_last(stamp, op=op, **d)
             return 'OK'
 
-def test_main():
-    import sys
-    if len(sys.argv) > 1:
-        sys.argv[1] = '7070'
-    app.run()
+import socketio
+
+def test_main(w=False):
+    if w:
+        mgr = socketio.KombuManager('amqp://', write_only=True)
+        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='defa')
+        return
+    mgr = socketio.KombuManager('amqp://')
+    sio = socketio.Server(client_manager=mgr, async_mode='threading')
+
+    @sio.event
+    def connect(sid, environ):
+        print('+++ online', sid)
+        sio.enter_room(sid, 'defa')
+        sio.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='defa')
+
+    @sio.event
+    def disconnect(sid):
+        print('+++ offline', sid)
+
+    from flask import Flask
+    app = Flask(__name__)
+    app.wsgi_app = socketio.WSGIApp(sio, app.wsgi_app)
+    app.run(threaded=True)
+
+
+
+
+
+#def test_main():
+#    import sys
+#    if len(sys.argv) > 1:
+#        sys.argv[1] = '7070'
+#    app.run()
 
 def update_params(**kwargs):
     global keys
