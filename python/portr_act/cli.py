@@ -38,12 +38,15 @@ def v2main(url):
         # TODO check remote shutdown cmd
         sio.disconnect()
         import os
-        os.system('sudo systemctl poweroff')
+        #os.system('sudo systemctl poweroff')
+        print('remote shut: ', data)
 
     sio.connect(url)
     import signal
     signal.signal(signal.SIGTERM, quit_s)
     try:
+        # TODO real auth
+        sio.emit('auth_ctl', dict(sign='abcd', timestamp=int(time.time())))
         sio.wait()
     except KeyboardInterrupt:
         quit_s(None, None)

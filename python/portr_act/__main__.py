@@ -21,7 +21,7 @@ args = parser.parse_args()
 def test_main():
     if args.command == 'srv':
         from . import index
-        index.test_main(args.w)
+        index.test_main()
     elif args.command == 'cli':
         from . import cli
         cli.test_main()

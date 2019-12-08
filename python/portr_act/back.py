@@ -1,6 +1,7 @@
 import socketio
 from . import index
 from .model import KAModel
+import time
 
 _m = None
 
@@ -10,27 +11,28 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
 
     global _m
     _m = KAModel(index.keys['lastdate_cache'])
+    ns = '/v2/ka'
 
     @_m.commit
     def set_alive():
         global _m
-        _m.keepalive = True
         d = _m.data
         t = time.time()
         _m.data = d._replace(first_active_time=t,
                              last_active_time=t,
-                             active_op='a')
+                             active_op='a',
+                             ws_keepalive=True)
 
     @_m.commit
     def set_dead():
         global _m
-        _m.keepalive = False
         d = _m.data
         t = time.time()
         _m.data = d._replace(first_active_time=t,
-                             active_op='b')
+                             active_op='b',
+                             ws_keepalive=False)
 
-    @sio.event
+    @sio.event()
     def connect(sid, environ):
         print('+++ online', sid)
         set_alive()
@@ -38,12 +40,15 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
     @sio.event
     def auth_ctl(sid, data):
         # TODO auth client
+        print('+++++ register: ', sid)
         sio.enter_room(sid, 'pi')
 
     @sio.event
     def disconnect(sid):
         print('+++ offline', sid)
         set_dead()
+
+    return sio
 
 
 def test_main(w=False, kombu_url='amqp://', **kwargs):

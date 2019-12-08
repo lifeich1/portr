@@ -63,8 +63,9 @@ def store_last(l, first_a=None, op=None):
 class hello:
     def GET(self):
         global keys, _mod
+        _touch_mod()
         _mod.sync()
-        al, info = _mod.is_alive(), _mod.data
+        al, info = _mod.is_alive(keys['dead_dur']), _mod.data
         fr, la = info.first_active_time, info.last_active_time
         ret = 'Hello + ' + '\nstartup: ' + time.ctime(keys['startup'])\
             + '\nalive: ' + str(al) + '\nnow: ' + time.ctime()
@@ -79,9 +80,10 @@ class query:
             fr = get_last().first_active_time
             return int(fr)
         else:
+            _touch_mod()
             global _mod
             _mod.sync()
-            return 'ALIVE' if _mod.is_alive() else 'DEAD'
+            return 'ALIVE' if _mod.is_alive(keys['dead_dur']) else 'DEAD'
 
 class keepalive:
     def GET(self, token):
@@ -95,7 +97,7 @@ class keepalive:
             if l < stamp:
                 d = {}
                 global _mod
-                if not _mod.is_alive():
+                if not _mod.is_alive(keys['dead_dur']):
                     d = dict(first_a=stamp)
                 store_last(stamp, op=op, **d)
             return 'OK'
@@ -105,8 +107,8 @@ import socketio
 class remote_shut:
     def GET(self, token):
         mgr = socketio.KombuManager('amqp://', write_only=True)
-        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='pi')
-        return 'OK'
+        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()})
+        return 'send shutdown'
 
 
 #def test_main(w=False):

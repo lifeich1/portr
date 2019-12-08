@@ -1,13 +1,15 @@
 import shelve
 import collections
+import time
 
 _fields = (
     'first_active_time',
     'last_active_time',
     'active_op',
+    'ws_keepalive',
 )
 
-_defv_fields = (0.0, 0.0, 'b')
+_defv_fields = (0.0, 0.0, 'b', False)
 
 def dic2list(d):
     return [d[k] for k in _fields]
@@ -23,7 +25,6 @@ class KAModel:
         self._path = path
         data_t = collections.namedtuple('data_t', _fields)
         self._data_t = data_t
-        self.keepalive = False
         self.sync()
 
     def sync(self):
@@ -48,4 +49,5 @@ class KAModel:
     def is_alive(self, dead_dur):
         l = self.data.last_active_time
         op = self.data.active_op
-        return ((time.time() - l < dead_dur) or self.keepalive) and (op == 'a')
+        ka = self.data.ws_keepalive
+        return ((time.time() - l < dead_dur) or ka) and (op == 'a')
