@@ -2,6 +2,7 @@ from . import index
 from . import utils
 import time
 import urllib.request
+import os
 
 import socketio
 
@@ -11,7 +12,6 @@ def alive_request(url, op, secret, verbose=False):
     if url is None:
         print('token:', token)
         return
-    # TODO send token
     resp = urllib.request.urlopen(url + '/' + token)
     ans = resp.read().decode('utf-8')
     if verbose:
@@ -34,19 +34,28 @@ def v2main(url):
         exit(0)
 
     @sio.event
-    def sy_shutdown(data):
+    def connect():
+        print("I'm connected!")
+
+    @sio.on('myevent')
+    def myevent(data):
+        print('got myevent')
         # TODO check remote shutdown cmd
-        sio.disconnect()
-        import os
+        #sio.disconnect()
         #os.system('sudo systemctl poweroff')
-        print('remote shut: ', data)
+
+    @sio.event
+    def connect_error():
+        print("The connection failed!")
+
+    @sio.event
+    def disconnect():
+        print("I'm disconnected!")
 
     sio.connect(url)
     import signal
     signal.signal(signal.SIGTERM, quit_s)
     try:
-        # TODO real auth
-        sio.emit('auth_ctl', dict(sign='abcd', timestamp=int(time.time())))
         sio.wait()
     except KeyboardInterrupt:
         quit_s(None, None)

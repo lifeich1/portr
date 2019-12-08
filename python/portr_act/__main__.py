@@ -15,6 +15,7 @@ p_cli.add_argument('-u', '--url', default='http://localhost:7070/ka', help='keep
 p_cli.add_argument('-o', '--option', default='a', help='msg option')
 
 p_back = subparsers.add_parser('back')
+p_back.add_argument('-w', action='store_true')
 
 args = parser.parse_args()
 
@@ -27,7 +28,7 @@ def test_main():
         cli.test_main()
     elif args.command == 'back':
         from . import back
-        back.test_main()
+        back.test_main(args.w)
     else:
         raise NotImplementedError
 

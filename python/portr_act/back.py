@@ -12,6 +12,7 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
     global _m
     _m = KAModel(index.keys['lastdate_cache'])
     ns = '/v2/ka'
+    room = 'pi'
 
     @_m.commit
     def set_alive():
@@ -28,20 +29,18 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
         global _m
         d = _m.data
         t = time.time()
-        _m.data = d._replace(first_active_time=t,
+        _m.data = d._replace(last_active_time=t,
                              active_op='b',
                              ws_keepalive=False)
 
     @sio.event()
     def connect(sid, environ):
         print('+++ online', sid)
+        print('+++++ register: ', sid, 'to', room)
+        sio.enter_room(sid, room)
+        sio.emit('myevent', data={'foo':'bar111'}, room='pi')
         set_alive()
-
-    @sio.event
-    def auth_ctl(sid, data):
-        # TODO auth client
-        print('+++++ register: ', sid)
-        sio.enter_room(sid, 'pi')
+        print('++++ rg rooms: ', sio.rooms(sid))
 
     @sio.event
     def disconnect(sid):
@@ -53,8 +52,10 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
 
 def test_main(w=False, kombu_url='amqp://', **kwargs):
     if w:
-        mgr = socketio.KombuManager(kombu_url)
-        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()},room='pi')
+        mgr = socketio.KombuManager(kombu_url, write_only=True)
+        mgr.emit('myevent', data={'foo':'bar'}, room='pi')
+        print('emit sy_shutdown')
+        return
     sio = create_server(kombu_url, **kwargs)
     from flask import Flask
     app = Flask(__name__)

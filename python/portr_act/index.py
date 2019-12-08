@@ -107,7 +107,7 @@ import socketio
 class remote_shut:
     def GET(self, token):
         mgr = socketio.KombuManager('amqp://', write_only=True)
-        mgr.emit('sy_shutdown', {'sign':'abcd','timestamp':time.time()})
+        mgr.emit('myevent', data={'foo':'bar'}, room='pi')
         return 'send shutdown'
 
 
