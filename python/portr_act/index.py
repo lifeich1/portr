@@ -12,7 +12,7 @@ urls = (
     '/q', 'query',
     '/q/(.*)', 'query',
     '/ka/(.*)', 'keepalive',
-    '/da/(.*)', 'remote_shut',
+    '/da/(.*)/(.*)', 'remote_shut',
 )
 app = web.application(urls, globals())
 
@@ -105,10 +105,11 @@ class keepalive:
 import socketio
 
 class remote_shut:
-    def GET(self, token):
+    def GET(self, timestamp, token):
+        d = dict(timestamp=timestamp, sign=token)
         mgr = socketio.KombuManager('amqp://', write_only=True)
-        mgr.emit('sy_shut', data={'foo':'bar'}, room='pi')
-        return 'send shutdown'
+        mgr.emit('sy_shut', data=d, room='pi')
+        return 'DONE'
 
 
 #def test_main(w=False):

@@ -43,6 +43,6 @@ secret = utils.enhance_secret(args.secret, index.keys['salt'])
 if args.command == 'cli':
     from . import cli
     #cli.main(args.url, args.option, secret)
-    cli.v2main(args.url)
+    cli.v2main(args.url, args.secret)
 else:
     raise NotImplementedError

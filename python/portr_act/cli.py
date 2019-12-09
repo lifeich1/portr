@@ -1,5 +1,6 @@
 from . import index
 from . import utils
+from . import auth
 import time
 import urllib.request
 import os
@@ -26,8 +27,9 @@ def test_main():
 def main(url, op, secret):
     alive_request(url, op, secret)
 
-def v2main(url):
+def v2main(url, secret):
     sio = socketio.Client()
+    check = auth.sy_op_checker(secret)
 
     def quit_s(signum, frame):
         sio.disconnect()
@@ -40,6 +42,13 @@ def v2main(url):
     @sio.event
     def sy_shut(data):
         print('got sy_shut')
+        if not ('timestamp' in data and 'sign' in data):
+            return
+        ts = data['timestamp']
+        s = data['sign']
+        if not check.check(ts, s, 'sy_shut'):
+            return
+        print('check sy_shut event pass')
         # TODO check remote shutdown cmd
         #sio.disconnect()
         #os.system('sudo systemctl poweroff')

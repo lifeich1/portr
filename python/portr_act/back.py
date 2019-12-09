@@ -1,5 +1,5 @@
 import socketio
-from . import index
+from . import index, auth
 from .model import KAModel
 import time
 
@@ -52,7 +52,12 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
 def test_main(w=False, kombu_url='amqp://', **kwargs):
     if w:
         mgr = socketio.KombuManager(kombu_url, write_only=True)
-        mgr.emit('sy_shut', data={'foo':'bar'}, room='pi')
+        t = int(time.time())
+        sec = kwargs['secret'] if 'secret' in kwargs else 'testtest'
+        signer = auth.sy_op_checker(sec)
+        s = signer.sign(t, 'sy_shut')
+        d = dict(timestamp=ts, sign=s)
+        mgr.emit('sy_shut', data=d, room='pi')
         print('emit sy_shutdown')
         return
     sio = create_server(kombu_url, **kwargs)
