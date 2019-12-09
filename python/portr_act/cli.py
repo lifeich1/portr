@@ -37,9 +37,9 @@ def v2main(url):
     def connect():
         print("I'm connected!")
 
-    @sio.on('myevent')
-    def myevent(data):
-        print('got myevent')
+    @sio.event
+    def sy_shut(data):
+        print('got sy_shut')
         # TODO check remote shutdown cmd
         #sio.disconnect()
         #os.system('sudo systemctl poweroff')

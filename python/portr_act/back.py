@@ -38,7 +38,6 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
         print('+++ online', sid)
         print('+++++ register: ', sid, 'to', room)
         sio.enter_room(sid, room)
-        sio.emit('myevent', data={'foo':'bar111'}, room='pi')
         set_alive()
         print('++++ rg rooms: ', sio.rooms(sid))
 
@@ -53,7 +52,7 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
 def test_main(w=False, kombu_url='amqp://', **kwargs):
     if w:
         mgr = socketio.KombuManager(kombu_url, write_only=True)
-        mgr.emit('myevent', data={'foo':'bar'}, room='pi')
+        mgr.emit('sy_shut', data={'foo':'bar'}, room='pi')
         print('emit sy_shutdown')
         return
     sio = create_server(kombu_url, **kwargs)
