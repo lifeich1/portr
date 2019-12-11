@@ -1,11 +1,12 @@
 import socketio
-from . import index, auth
+from . import index, auth, utils
 from .model import KAModel
 import time
 
 _m = None
+_la_con_ts = time.time()
 
-def create_server(kombu_url='amqp://', async_mode='threading'):
+def create_server(kombu_url='amqp://', async_mode='threading', cookie='cookie'):
     mgr = socketio.KombuManager(kombu_url)
     sio = socketio.Server(client_manager=mgr, async_mode=async_mode)
 
@@ -35,6 +36,17 @@ def create_server(kombu_url='amqp://', async_mode='threading'):
 
     @sio.event()
     def connect(sid, environ):
+        token = 'HTTP_SERVICE_TOKEN'
+        print(repr(environ))
+        if token not in environ:
+            return False
+        token = environ[token]
+        ts, op = utils.parse_po_token(token, index.keys['salt'], cookie)
+        global _la_con_ts
+        if ts is None or ts <= _la_con_ts and op == 'c':
+            print('* fail conn:', ts, op)
+            return False
+        _la_con_ts = ts
         print('+++ online', sid)
         print('+++++ register: ', sid, 'to', room)
         sio.enter_room(sid, room)

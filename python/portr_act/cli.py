@@ -32,8 +32,10 @@ def main(url, op, secret):
     alive_request(url, op, secret)
 
 def v2main(url, secret, cookie):
-    sio = socketio.Client()
+    print('cookie:', repr(cookie))
+    sio = socketio.Client(reconnection=False)
     check = auth.sy_op_checker(secret)
+    cli_connected = False
 
     def quit_s(signum, frame):
         sio.disconnect()
@@ -65,7 +67,18 @@ def v2main(url, secret, cookie):
     def disconnect():
         print("I'm disconnected!")
 
-    sio.connect(url)
+    i = 1
+    while not sio.connected:
+        token = utils.gen_po_token(time.time(), 'c', index.keys['salt'], cookie)
+        print('token', repr(token))
+        sio.connect(url, headers={'Service-Token': token})
+        if not sio.connected:
+            w = 5
+            print(i, 'retry in', w, 'sec')
+            sio.disconnect()
+            time.sleep(w)
+
+    print('think connected')
     import signal
     signal.signal(signal.SIGTERM, quit_s)
     try:

@@ -28,7 +28,7 @@ def test_main():
         cli.test_main(args.secret)
     elif args.command == 'back':
         from . import back
-        back.test_main(args.w, secret=args.secret)
+        back.test_main(args.w, cookie=args.secret)
     else:
         raise NotImplementedError
 
@@ -38,7 +38,6 @@ if args.test:
 
 from . import index
 from . import utils
-secret = utils.enhance_secret(args.secret, index.keys['salt'])
 
 if args.command == 'cli':
     from . import cli
