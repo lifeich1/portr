@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 import configparser
 import socketio
 import os
@@ -9,10 +12,13 @@ fn = '/var/opt/portr-act.ini'
 
 if os.path.exists(fn):
     config.read(fn)
-    if 'back' in config and 'kombu-url' in config['back']:
-        kw['kombu_url'] = config['back']['kombu-url']
+    if 'back' in config:
+        d = dict(config['back'])
+        if 'async_mode' in d:
+            del d['async_mode']
+        kw.update(d)
 
 import portr_act
 
 sio = portr_act.back.create_server(**kw)
-application = socketio.WSGIApp(sio)
+app = socketio.WSGIApp(sio)
