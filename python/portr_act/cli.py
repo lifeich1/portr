@@ -21,13 +21,17 @@ def alive_request(url, op, secret, verbose=False):
         print('error: %r' % ans)
 
 
-def test_main():
-    alive_request('http://localhost:7070/ka', 'a', index.keys['secret'], verbose=True)
+def test_main(secret):
+    #alive_request('http://localhost:7070/ka', 'a', index.keys['secret'], verbose=True)
+    t = int(time.time())
+    se = auth.sy_op_checker(secret)
+    s = se.sign(t, 'sy_shut')
+    print('/' + str(t) + '/' + s)
 
 def main(url, op, secret):
     alive_request(url, op, secret)
 
-def v2main(url, secret):
+def v2main(url, secret, cookie):
     sio = socketio.Client()
     check = auth.sy_op_checker(secret)
 

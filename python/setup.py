@@ -10,5 +10,8 @@ setuptools.setup(
     install_requires=[
         'web.py>=0.40',
         'python-socketio',
+        'kombu',
+        'flask',
+        'requests',
     ],
 )

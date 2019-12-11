@@ -18,7 +18,9 @@ class sy_op_checker:
         return s
 
     def check(self, timestamp, sign, data=None):
+        timestamp = int(timestamp)
         if self._ts >= timestamp:
             return False
         s = self.sign(timestamp, data)
+        print(repr(s), repr(sign))
         return s == sign

@@ -56,7 +56,7 @@ def test_main(w=False, kombu_url='amqp://', **kwargs):
         sec = kwargs['secret'] if 'secret' in kwargs else 'testtest'
         signer = auth.sy_op_checker(sec)
         s = signer.sign(t, 'sy_shut')
-        d = dict(timestamp=ts, sign=s)
+        d = dict(timestamp=t, sign=s)
         mgr.emit('sy_shut', data=d, room='pi')
         print('emit sy_shutdown')
         return

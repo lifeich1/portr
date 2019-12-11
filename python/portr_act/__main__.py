@@ -12,7 +12,7 @@ p_srv.add_argument('-w', action='store_true')
 p_cli = subparsers.add_parser('cli')
 
 p_cli.add_argument('-u', '--url', default='http://localhost:7070/ka', help='keepalive target url prefix')
-p_cli.add_argument('-o', '--option', default='a', help='msg option')
+p_cli.add_argument('-c', '--cookie', default='cookie', help='connect cookie')
 
 p_back = subparsers.add_parser('back')
 p_back.add_argument('-w', action='store_true')
@@ -25,10 +25,10 @@ def test_main():
         index.test_main()
     elif args.command == 'cli':
         from . import cli
-        cli.test_main()
+        cli.test_main(args.secret)
     elif args.command == 'back':
         from . import back
-        back.test_main(args.w)
+        back.test_main(args.w, secret=args.secret)
     else:
         raise NotImplementedError
 
@@ -42,7 +42,6 @@ secret = utils.enhance_secret(args.secret, index.keys['salt'])
 
 if args.command == 'cli':
     from . import cli
-    #cli.main(args.url, args.option, secret)
-    cli.v2main(args.url, args.secret)
+    cli.v2main(args.url, args.secret, args.cookie)
 else:
     raise NotImplementedError
