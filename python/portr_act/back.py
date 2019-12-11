@@ -37,7 +37,6 @@ def create_server(kombu_url='amqp://', async_mode='threading', cookie='cookie'):
     @sio.event()
     def connect(sid, environ):
         token = 'HTTP_SERVICE_TOKEN'
-        print(repr(environ))
         if token not in environ:
             return False
         token = environ[token]
