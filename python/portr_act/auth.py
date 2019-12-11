@@ -18,8 +18,14 @@ class sy_op_checker:
         return s
 
     def check(self, timestamp, sign, data=None):
-        timestamp = int(timestamp)
-        if self._ts >= timestamp:
+        try:
+            timestamp = int(timestamp)
+            if self._ts >= timestamp:
+                return False
+            s = self.sign(timestamp, data)
+            return s == sign
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(e)
             return False
-        s = self.sign(timestamp, data)
-        return s == sign
