@@ -67,21 +67,26 @@ def v2main(url, secret, cookie):
     def disconnect():
         print("I'm disconnected!")
 
-    i = 1
-    while not sio.connected:
-        token = utils.gen_po_token(time.time(), 'c', index.keys['salt'], cookie)
-        print('token', repr(token))
-        sio.connect(url, headers={'Service-Token': token})
-        if not sio.connected:
-            w = 5
-            print(i, 'retry in', w, 'sec')
-            sio.disconnect()
-            time.sleep(w)
+    @sio.event
+    def connect_error():
+        sio.disconnect()
 
-    print('think connected')
     import signal
     signal.signal(signal.SIGTERM, quit_s)
-    try:
-        sio.wait()
-    except KeyboardInterrupt:
-        quit_s(None, None)
+
+    i = 1
+    while True:
+        token = utils.gen_po_token(time.time(), 'c', index.keys['salt'], cookie)
+
+        rc = sio.connect(url, headers={'Service-Token': token})
+
+        try:
+            sio.wait()
+        except KeyboardInterrupt:
+            quit_s(None, None)
+
+        w = 5
+        print(i, 'retry in', w, 'sec')
+        sio.disconnect()
+        time.sleep(w)
+

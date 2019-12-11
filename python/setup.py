@@ -9,7 +9,7 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=[
         'web.py>=0.40',
-        'python-socketio',
+        'python-socketio>=4.4',
         'kombu',
         'flask',
         'requests',
