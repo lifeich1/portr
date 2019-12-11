@@ -65,7 +65,7 @@ def test_main(w=False, kombu_url='amqp://', **kwargs):
     if w:
         mgr = socketio.KombuManager(kombu_url, write_only=True)
         t = int(time.time())
-        sec = kwargs['secret'] if 'secret' in kwargs else 'testtest'
+        sec = kwargs['cookie'] if 'cookie' in kwargs else 'testtest'
         signer = auth.sy_op_checker(sec)
         s = signer.sign(t, 'sy_shut')
         d = dict(timestamp=t, sign=s)

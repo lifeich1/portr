@@ -34,6 +34,7 @@ def main(url, op, secret):
 def v2main(url, secret, cookie):
     print('cookie:', repr(cookie))
     sio = socketio.Client(reconnection=False)
+    print('sec:', repr(secret))
     check = auth.sy_op_checker(secret)
     cli_connected = False
 
